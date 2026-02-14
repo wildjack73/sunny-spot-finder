@@ -9,93 +9,83 @@ interface Props {
 export default function ForecastCard({ forecast }: Props) {
   const timeLabel =
     forecast.hoursUntilSun <= 1
-      ? "dans moins d'1h"
-      : `dans ${forecast.hoursUntilSun}h`;
+      ? "moins d'1h"
+      : `${forecast.hoursUntilSun}h`;
 
   return (
     <View style={styles.card}>
-      <View style={styles.header}>
-        <Text style={styles.clockEmoji}>🕐</Text>
-        <Text style={styles.title}>Soleil prévu ici</Text>
+      <Text style={styles.title}>Soleil prevu ici</Text>
+
+      <View style={styles.timeRow}>
+        <Text style={styles.timePrefix}>dans </Text>
+        <Text style={styles.timeValue}>{timeLabel}</Text>
       </View>
 
-      <Text style={styles.timeLabel}>{timeLabel}</Text>
-      <Text style={styles.timeValue}>vers {forecast.sunnyTime}</Text>
+      <Text style={styles.timeDetail}>vers {forecast.sunnyTime}</Text>
 
-      <View style={styles.weatherRow}>
+      <View style={styles.weatherPill}>
         <Text style={styles.weatherEmoji}>{forecast.emoji}</Text>
         <Text style={styles.weatherText}>
-          {forecast.label} - {forecast.temperature}°C
+          {forecast.label} · {forecast.temperature}°
         </Text>
       </View>
-
-      <Text style={styles.hint}>
-        Patience, le soleil arrive bientôt !
-      </Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#E3F2FD',
-    borderRadius: 20,
-    padding: 24,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 20,
     marginHorizontal: 16,
-    marginVertical: 8,
+    marginTop: 12,
     alignItems: 'center',
-    shadowColor: '#2196F3',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 16,
-  },
-  clockEmoji: {
-    fontSize: 24,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
   title: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1565C0',
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#9CA3AF',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: 12,
   },
-  timeLabel: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: '#F57F17',
-    marginBottom: 4,
+  timeRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+  },
+  timePrefix: {
+    fontSize: 18,
+    color: '#6B7280',
   },
   timeValue: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 16,
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#B45309',
   },
-  weatherRow: {
+  timeDetail: {
+    fontSize: 14,
+    color: '#9CA3AF',
+    marginTop: 4,
+    marginBottom: 14,
+  },
+  weatherPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 12,
-    backgroundColor: 'rgba(255,255,255,0.6)',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 12,
+    gap: 6,
+    backgroundColor: '#F9FAFB',
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 20,
   },
   weatherEmoji: {
-    fontSize: 20,
+    fontSize: 16,
   },
   weatherText: {
-    fontSize: 15,
-    color: '#555',
+    fontSize: 14,
+    color: '#6B7280',
     fontWeight: '500',
-  },
-  hint: {
-    fontSize: 13,
-    color: '#90A4AE',
-    fontStyle: 'italic',
   },
 });

@@ -1,136 +1,186 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Linking } from 'react-native';
-import { Coordinates } from '../types';
-import { buildHotelSearchLink, buildWeekendSearchLink } from '../services/expedia';
+import { Coordinates, Hotel } from '../types';
+import { fetchHotelsNearSpot } from '../services/hotels';
+import { buildHotelSearchLink, buildHotelDetailLink } from '../services/expedia';
 
 interface Props {
   spotCoordinates: Coordinates;
-  spotDirection: string;
-  spotDistance: number;
+  cityName?: string;
 }
 
-export default function HotelCard({ spotCoordinates, spotDirection, spotDistance }: Props) {
-  const openTonight = () => {
-    Linking.openURL(buildHotelSearchLink(spotCoordinates));
-  };
-
-  const openWeekend = () => {
-    Linking.openURL(buildWeekendSearchLink(spotCoordinates));
-  };
-
+function StarRating({ stars }: { stars: number | null }) {
+  if (!stars) return null;
   return (
-    <View style={styles.card}>
-      <View style={styles.header}>
-        <Text style={styles.headerEmoji}>🏨</Text>
-        <View>
-          <Text style={styles.title}>Dormir au soleil</Text>
-          <Text style={styles.subtitle}>
-            Hotels a {spotDistance} km {spotDirection}
-          </Text>
+    <Text style={styles.stars}>
+      {'★'.repeat(stars)}
+      {'☆'.repeat(5 - stars)}
+    </Text>
+  );
+}
+
+export default function HotelCard({ spotCoordinates, cityName }: Props) {
+  const [hotels, setHotels] = useState<Hotel[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    fetchHotelsNearSpot(spotCoordinates)
+      .then(setHotels)
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [spotCoordinates.latitude, spotCoordinates.longitude]);
+
+  const openHotelBooking = (hotel: Hotel) => {
+    Linking.openURL(buildHotelDetailLink(hotel.name, hotel.coordinates));
+  };
+
+  const openHotelsSearch = () => {
+    Linking.openURL(buildHotelSearchLink(spotCoordinates, cityName));
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.sectionTitle}>Ou dormir</Text>
+        <View style={styles.loadingCard}>
+          <Text style={styles.loadingText}>Recherche d'hotels...</Text>
         </View>
       </View>
+    );
+  }
 
-      <TouchableOpacity style={styles.tonightButton} onPress={openTonight} activeOpacity={0.8}>
-        <Text style={styles.tonightEmoji}>🌙</Text>
-        <View style={styles.buttonTextContainer}>
-          <Text style={styles.buttonTitle}>Ce soir</Text>
-          <Text style={styles.buttonSubtitle}>Trouvez un hotel pour cette nuit</Text>
-        </View>
-        <Text style={styles.arrow}>›</Text>
-      </TouchableOpacity>
+  return (
+    <View style={styles.container}>
+      <Text style={styles.sectionTitle}>Ou dormir</Text>
 
-      <TouchableOpacity style={styles.weekendButton} onPress={openWeekend} activeOpacity={0.8}>
-        <Text style={styles.weekendEmoji}>☀️</Text>
-        <View style={styles.buttonTextContainer}>
-          <Text style={styles.buttonTitle}>Ce week-end</Text>
-          <Text style={styles.buttonSubtitle}>Escapade soleil samedi-dimanche</Text>
-        </View>
-        <Text style={styles.arrow}>›</Text>
-      </TouchableOpacity>
+      {hotels.length > 0 ? (
+        <>
+          {hotels.map((hotel) => (
+            <TouchableOpacity
+              key={hotel.id}
+              style={styles.hotelItem}
+              onPress={() => openHotelBooking(hotel)}
+              activeOpacity={0.6}
+            >
+              <View style={styles.hotelInfo}>
+                <Text style={styles.hotelName} numberOfLines={1}>
+                  {hotel.name}
+                </Text>
+                <View style={styles.hotelMeta}>
+                  <StarRating stars={hotel.stars} />
+                  <Text style={styles.hotelDistance}>{hotel.distance} km</Text>
+                </View>
+              </View>
+              <Text style={styles.arrow}>›</Text>
+            </TouchableOpacity>
+          ))}
 
-      <Text style={styles.poweredBy}>via Expedia</Text>
+          <TouchableOpacity
+            style={styles.moreButton}
+            onPress={openHotelsSearch}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.moreButtonText}>Voir plus sur Hotels.com</Text>
+          </TouchableOpacity>
+        </>
+      ) : (
+        <TouchableOpacity
+          style={styles.fallbackButton}
+          onPress={openHotelsSearch}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.fallbackText}>Chercher un hotel sur Hotels.com</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
+  container: {
     marginHorizontal: 16,
-    marginTop: 16,
-    marginBottom: 8,
-    backgroundColor: '#FFF3E0',
-    borderRadius: 20,
+    marginTop: 20,
+  },
+  sectionTitle: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#9CA3AF',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: 10,
+  },
+  loadingCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
     padding: 20,
-    shadowColor: '#E65100',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
   },
-  header: {
+  loadingText: {
+    fontSize: 14,
+    color: '#9CA3AF',
+  },
+  hotelItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    marginBottom: 16,
-  },
-  headerEmoji: {
-    fontSize: 32,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#E65100',
-  },
-  subtitle: {
-    fontSize: 13,
-    color: '#999',
-    marginTop: 2,
-  },
-  tonightButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
     padding: 14,
-    marginBottom: 8,
+    marginBottom: 6,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
   },
-  tonightEmoji: {
-    fontSize: 24,
-    marginRight: 12,
-  },
-  weekendButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 12,
-  },
-  weekendEmoji: {
-    fontSize: 24,
-    marginRight: 12,
-  },
-  buttonTextContainer: {
+  hotelInfo: {
     flex: 1,
   },
-  buttonTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
+  hotelName: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#1C1C1E',
+    marginBottom: 3,
   },
-  buttonSubtitle: {
+  hotelMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  stars: {
     fontSize: 12,
-    color: '#888',
-    marginTop: 2,
+    color: '#D97706',
+    letterSpacing: 1,
+  },
+  hotelDistance: {
+    fontSize: 13,
+    color: '#9CA3AF',
   },
   arrow: {
-    fontSize: 24,
-    color: '#CCC',
-    fontWeight: '300',
+    fontSize: 20,
+    color: '#D1D5DB',
   },
-  poweredBy: {
-    textAlign: 'center',
-    fontSize: 11,
-    color: '#BDBDBD',
+  moreButton: {
+    alignItems: 'center',
+    paddingVertical: 12,
+    marginTop: 4,
+  },
+  moreButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#D97706',
+    textDecorationLine: 'underline',
+  },
+  fallbackButton: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    padding: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+  },
+  fallbackText: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#D97706',
   },
 });

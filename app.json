@@ -11,18 +11,20 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#FDB813"
+      "backgroundColor": "#FFFFFF"
     },
     "ios": {
       "supportsTablet": true,
+      "bundleIdentifier": "com.wildjack73.sunny",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Nous avons besoin de votre position pour trouver le soleil le plus proche."
       }
     },
     "android": {
+      "package": "com.wildjack73.sunny",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#FDB813"
+        "backgroundColor": "#FFFFFF"
       },
       "edgeToEdgeEnabled": true,
       "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]

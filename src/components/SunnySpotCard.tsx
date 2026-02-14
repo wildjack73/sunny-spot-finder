@@ -1,43 +1,61 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { SunnySpot } from '../types';
+import { LocationName } from '../services/geocoding';
 import DirectionsButton from './DirectionsButton';
 
 interface Props {
   spot: SunnySpot;
   userLatitude: number;
   userLongitude: number;
+  location: LocationName | null;
 }
 
-export default function SunnySpotCard({ spot, userLatitude, userLongitude }: Props) {
+export default function SunnySpotCard({ spot, userLatitude, userLongitude, location }: Props) {
   return (
     <View style={styles.card}>
       <View style={styles.header}>
-        <Text style={styles.sunEmoji}>☀️</Text>
-        <Text style={styles.title}>Soleil trouvé !</Text>
-      </View>
-
-      <View style={styles.infoRow}>
-        <View style={styles.infoItem}>
-          <Text style={styles.infoValue}>{spot.distance} km</Text>
-          <Text style={styles.infoLabel}>Distance</Text>
-        </View>
-        <View style={styles.divider} />
-        <View style={styles.infoItem}>
-          <Text style={styles.infoValue}>{spot.direction}</Text>
-          <Text style={styles.infoLabel}>Direction</Text>
-        </View>
-        <View style={styles.divider} />
-        <View style={styles.infoItem}>
-          <Text style={styles.infoValue}>{spot.estimatedTime} min</Text>
-          <Text style={styles.infoLabel}>En voiture</Text>
+        <View style={styles.badge}>
+          <Text style={styles.badgeText}>Soleil disponible</Text>
         </View>
       </View>
 
-      <View style={styles.weatherInfo}>
-        <Text style={styles.weatherText}>
-          {spot.weather.emoji} {spot.weather.label} - {spot.weather.temperature}°C
-        </Text>
+      {location && (
+        <View style={styles.locationRow}>
+          <Text style={styles.cityText}>{location.city}</Text>
+          {location.department ? (
+            <Text style={styles.departmentText}>{location.department}</Text>
+          ) : null}
+        </View>
+      )}
+
+      <LinearGradient
+        colors={['#FFFBF5', '#FFF8EE', '#FFFBF5']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.statsRow}
+      >
+        <View style={styles.stat}>
+          <Text style={styles.statValue}>{spot.distance}</Text>
+          <Text style={styles.statUnit}>km</Text>
+        </View>
+        <View style={styles.statDivider} />
+        <View style={styles.stat}>
+          <Text style={styles.statValue}>{spot.direction}</Text>
+          <Text style={styles.statUnit}>direction</Text>
+        </View>
+        <View style={styles.statDivider} />
+        <View style={styles.stat}>
+          <Text style={styles.statValue}>{spot.estimatedTime}</Text>
+          <Text style={styles.statUnit}>min</Text>
+        </View>
+      </LinearGradient>
+
+      <View style={styles.weatherRow}>
+        <Text style={styles.weatherEmoji}>{spot.weather.emoji}</Text>
+        <Text style={styles.weatherLabel}>{spot.weather.label}</Text>
+        <Text style={styles.weatherTemp}>{spot.weather.temperature}°</Text>
       </View>
 
       <DirectionsButton
@@ -52,69 +70,91 @@ export default function SunnySpotCard({ spot, userLatitude, userLongitude }: Pro
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#FFF9C4',
-    borderRadius: 20,
-    padding: 24,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 20,
     marginHorizontal: 16,
-    marginVertical: 8,
-    shadowColor: '#FDB813',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 6,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
   header: {
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  badge: {
+    backgroundColor: '#FEF3C7',
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+  },
+  badgeText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#B45309',
+  },
+  locationRow: {
+    alignItems: 'center',
+    marginBottom: 18,
+  },
+  cityText: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#1C1C1E',
+  },
+  departmentText: {
+    fontSize: 14,
+    color: '#9CA3AF',
+    marginTop: 2,
+  },
+  statsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 20,
-    gap: 8,
-  },
-  sunEmoji: {
-    fontSize: 32,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: '#F57F17',
-  },
-  infoRow: {
-    flexDirection: 'row',
     justifyContent: 'space-around',
-    alignItems: 'center',
-    marginBottom: 16,
+    paddingVertical: 14,
+    marginBottom: 14,
+    borderRadius: 10,
+    overflow: 'hidden',
   },
-  infoItem: {
+  stat: {
     alignItems: 'center',
     flex: 1,
   },
-  infoValue: {
+  statValue: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#333',
+    color: '#B45309',
   },
-  infoLabel: {
-    fontSize: 12,
-    color: '#888',
-    marginTop: 4,
+  statUnit: {
+    fontSize: 11,
+    color: '#9CA3AF',
+    marginTop: 2,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
-  divider: {
+  statDivider: {
     width: 1,
-    height: 40,
-    backgroundColor: '#E0C85A',
+    height: 30,
+    backgroundColor: '#E5E7EB',
   },
-  weatherInfo: {
+  weatherRow: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
     marginBottom: 16,
-    paddingVertical: 8,
-    backgroundColor: 'rgba(255,255,255,0.5)',
-    borderRadius: 12,
   },
-  weatherText: {
-    fontSize: 16,
-    color: '#555',
+  weatherEmoji: {
+    fontSize: 18,
+  },
+  weatherLabel: {
+    fontSize: 14,
+    color: '#6B7280',
     fontWeight: '500',
+  },
+  weatherTemp: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1C1C1E',
   },
 });

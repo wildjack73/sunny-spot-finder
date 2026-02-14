@@ -7,15 +7,20 @@ interface Props {
   title?: string;
 }
 
-export default function WeatherCard({ weather, title = 'Météo actuelle' }: Props) {
+export default function WeatherCard({ weather, title = 'Votre position' }: Props) {
   return (
-    <View style={[styles.card, weather.isSunny ? styles.sunny : styles.cloudy]}>
+    <View style={styles.card}>
       <Text style={styles.title}>{title}</Text>
-      <Text style={styles.emoji}>{weather.emoji}</Text>
-      <Text style={styles.label}>{weather.label}</Text>
-      <View style={styles.details}>
-        <Text style={styles.temp}>{weather.temperature}°C</Text>
-        <Text style={styles.wind}>{weather.windSpeed} km/h</Text>
+      <View style={styles.row}>
+        <Text style={styles.emoji}>{weather.emoji}</Text>
+        <View style={styles.info}>
+          <Text style={styles.label}>{weather.label}</Text>
+          <View style={styles.details}>
+            <Text style={styles.temp}>{weather.temperature}°</Text>
+            <View style={styles.dot} />
+            <Text style={styles.wind}>{weather.windSpeed} km/h</Text>
+          </View>
+        </View>
       </View>
     </View>
   );
@@ -23,52 +28,57 @@ export default function WeatherCard({ weather, title = 'Météo actuelle' }: Pro
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 20,
-    padding: 24,
-    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 18,
     marginHorizontal: 16,
-    marginVertical: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  sunny: {
-    backgroundColor: '#FFF8E1',
-  },
-  cloudy: {
-    backgroundColor: '#ECEFF1',
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
   title: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#666',
-    marginBottom: 8,
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#9CA3AF',
     textTransform: 'uppercase',
-    letterSpacing: 1,
+    letterSpacing: 0.8,
+    marginBottom: 12,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   emoji: {
-    fontSize: 64,
-    marginVertical: 8,
+    fontSize: 36,
+    marginRight: 14,
+  },
+  info: {
+    flex: 1,
   },
   label: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#333',
-    marginBottom: 12,
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1C1C1E',
+    marginBottom: 4,
   },
   details: {
     flexDirection: 'row',
-    gap: 24,
+    alignItems: 'center',
   },
   temp: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#555',
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#6B7280',
+  },
+  dot: {
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
+    backgroundColor: '#D1D5DB',
+    marginHorizontal: 8,
   },
   wind: {
-    fontSize: 16,
-    color: '#888',
+    fontSize: 14,
+    color: '#9CA3AF',
   },
 });

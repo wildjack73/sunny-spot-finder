@@ -42,4 +42,14 @@ export interface PointOfInterest {
 
 export type POIType = 'beach' | 'park' | 'viewpoint' | 'lake' | 'hiking' | 'nature';
 
+export interface Hotel {
+  id: string;
+  name: string;
+  stars: number | null;
+  coordinates: Coordinates;
+  distance: number; // km from sunny spot
+  phone?: string;
+  website?: string;
+}
+
 export type SearchStatus = 'idle' | 'locating' | 'checking_weather' | 'searching' | 'found' | 'already_sunny' | 'no_sun_found' | 'error';

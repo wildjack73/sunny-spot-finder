@@ -35,23 +35,22 @@ export default function POIList({ pois, userLatitude, userLongitude }: Props) {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>A faire au soleil</Text>
-      <Text style={styles.subtitle}>Points d'interet a proximite</Text>
 
       {pois.map((poi) => (
         <TouchableOpacity
           key={poi.id}
-          style={styles.poiCard}
+          style={styles.item}
           onPress={() => openDirections(poi)}
-          activeOpacity={0.7}
+          activeOpacity={0.6}
         >
-          <Text style={styles.poiEmoji}>{poi.emoji}</Text>
-          <View style={styles.poiInfo}>
-            <Text style={styles.poiName} numberOfLines={1}>
+          <Text style={styles.emoji}>{poi.emoji}</Text>
+          <View style={styles.info}>
+            <Text style={styles.name} numberOfLines={1}>
               {poi.name}
             </Text>
-            <Text style={styles.poiDistance}>{poi.distance} km du spot</Text>
+            <Text style={styles.distance}>{poi.distance} km</Text>
           </View>
-          <Text style={styles.poiArrow}>›</Text>
+          <Text style={styles.arrow}>›</Text>
         </TouchableOpacity>
       ))}
     </View>
@@ -61,53 +60,47 @@ export default function POIList({ pois, userLatitude, userLongitude }: Props) {
 const styles = StyleSheet.create({
   container: {
     marginHorizontal: 16,
-    marginTop: 16,
-    marginBottom: 8,
+    marginTop: 20,
   },
   title: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#333',
-    marginBottom: 4,
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#9CA3AF',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: 10,
   },
-  subtitle: {
-    fontSize: 13,
-    color: '#999',
-    marginBottom: 12,
-  },
-  poiCard: {
+  item: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
     padding: 14,
-    marginBottom: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 2,
+    marginBottom: 6,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
   },
-  poiEmoji: {
-    fontSize: 28,
+  emoji: {
+    fontSize: 20,
     marginRight: 12,
+    width: 28,
+    textAlign: 'center',
   },
-  poiInfo: {
+  info: {
     flex: 1,
   },
-  poiName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
+  name: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#1C1C1E',
   },
-  poiDistance: {
+  distance: {
     fontSize: 13,
-    color: '#888',
-    marginTop: 2,
+    color: '#9CA3AF',
+    marginTop: 1,
   },
-  poiArrow: {
-    fontSize: 24,
-    color: '#CCC',
-    fontWeight: '300',
+  arrow: {
+    fontSize: 20,
+    color: '#D1D5DB',
   },
 });

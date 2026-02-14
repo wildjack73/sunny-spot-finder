@@ -29,29 +29,22 @@ export default function DirectionsButton({
   };
 
   return (
-    <TouchableOpacity style={styles.button} onPress={openDirections} activeOpacity={0.8}>
-      <Text style={styles.buttonText}>Itinéraire</Text>
+    <TouchableOpacity style={styles.button} onPress={openDirections} activeOpacity={0.7}>
+      <Text style={styles.buttonText}>Y aller</Text>
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: '#F57F17',
-    borderRadius: 16,
-    paddingVertical: 16,
-    paddingHorizontal: 32,
+    backgroundColor: '#D97706',
+    borderRadius: 10,
+    paddingVertical: 14,
     alignItems: 'center',
-    shadowColor: '#F57F17',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
   },
   buttonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '700',
-    letterSpacing: 0.5,
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

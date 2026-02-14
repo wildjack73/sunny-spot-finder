@@ -1,37 +1,54 @@
 import { Coordinates } from '../types';
 
-// Hotels.com search by coordinates
-// Affiliate tracking: the Creator Program tracks via cookies when users
-// click through from the app. For proper tracking, create a generic
-// "search hotels" link in your Expedia Creator dashboard and set it below.
-const AFFILIATE_BASE_URL: string | null = null; // Set your Creator link here if available
-
-export function buildHotelSearchLink(coords: Coordinates): string {
+export function buildHotelDetailLink(hotelName: string, coords: Coordinates): string {
   const checkin = getDateString(0);
   const checkout = getDateString(1);
-  return buildSearchUrl(coords, checkin, checkout);
+
+  const params = new URLSearchParams({
+    ss: hotelName,
+    checkin: checkin,
+    checkout: checkout,
+    latitude: coords.latitude.toFixed(4),
+    longitude: coords.longitude.toFixed(4),
+    lang: 'fr',
+  });
+
+  return `https://www.booking.com/searchresults.fr.html?${params.toString()}`;
 }
 
-export function buildWeekendSearchLink(coords: Coordinates): string {
+export function buildHotelSearchLink(coords: Coordinates, cityName?: string): string {
+  const checkin = getDateString(0);
+  const checkout = getDateString(1);
+  return buildSearchUrl(coords, checkin, checkout, cityName);
+}
+
+export function buildWeekendSearchLink(coords: Coordinates, cityName?: string): string {
   const nextSaturday = getNextWeekendDate();
   const sunday = new Date(nextSaturday);
   sunday.setDate(sunday.getDate() + 1);
-  return buildSearchUrl(coords, formatDate(nextSaturday), formatDate(sunday));
+  return buildSearchUrl(coords, formatDate(nextSaturday), formatDate(sunday), cityName);
 }
 
-function buildSearchUrl(coords: Coordinates, checkin: string, checkout: string): string {
+function buildSearchUrl(
+  coords: Coordinates,
+  checkin: string,
+  checkout: string,
+  cityName?: string,
+): string {
   const lat = coords.latitude.toFixed(4);
   const lon = coords.longitude.toFixed(4);
+  const destination = cityName ? `${cityName}, France` : `${lat},${lon}`;
 
   const params = new URLSearchParams({
-    'q-destination': '',
+    destination: destination,
     latLong: `${lat},${lon}`,
-    'q-check-in': checkin,
-    'q-check-out': checkout,
-    'sort-order': 'DISTANCE',
+    d1: checkin,
+    d2: checkout,
+    sort: 'DISTANCE_FROM_LANDMARK',
+    adults: '2',
   });
 
-  return `https://www.hotels.com/search.do?${params.toString()}`;
+  return `https://fr.hotels.com/Hotel-Search?${params.toString()}`;
 }
 
 function getDateString(daysFromNow: number): string {

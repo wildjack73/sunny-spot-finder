@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
+  Image,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
@@ -9,6 +10,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import WeatherCard from '../src/components/WeatherCard';
 import SunnySpotCard from '../src/components/SunnySpotCard';
 import SearchingAnimation from '../src/components/SearchingAnimation';
@@ -19,6 +21,7 @@ import { getCurrentLocation } from '../src/services/location';
 import { fetchWeatherAtPoint, fetchSunnyForecast } from '../src/services/weather';
 import { findNearestSunnySpot } from '../src/services/sunnyFinder';
 import { fetchPOIsNearSpot } from '../src/services/poi';
+import { reverseGeocode, LocationName } from '../src/services/geocoding';
 import { Coordinates, WeatherData, SunnySpot, SunnyForecast, PointOfInterest, SearchStatus } from '../src/types';
 
 export default function HomeScreen() {
@@ -27,6 +30,7 @@ export default function HomeScreen() {
   const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
   const [currentWeather, setCurrentWeather] = useState<WeatherData | null>(null);
   const [sunnySpot, setSunnySpot] = useState<SunnySpot | null>(null);
+  const [spotLocation, setSpotLocation] = useState<LocationName | null>(null);
   const [forecast, setForecast] = useState<SunnyForecast | null>(null);
   const [pois, setPois] = useState<PointOfInterest[]>([]);
   const [searchProgress, setSearchProgress] = useState(0);
@@ -36,27 +40,24 @@ export default function HomeScreen() {
     setStatus('locating');
     setError(null);
     setSunnySpot(null);
+    setSpotLocation(null);
     setForecast(null);
     setPois([]);
     setSearchProgress(0);
 
     try {
-      // Step 1: Get location
       const location = await getCurrentLocation();
       setUserLocation(location);
 
-      // Step 2: Check current weather
       setStatus('checking_weather');
       const weather = await fetchWeatherAtPoint(location);
       setCurrentWeather(weather);
 
-      // Step 3: Already sunny?
       if (weather.isSunny) {
         setStatus('already_sunny');
         return;
       }
 
-      // Step 4: Search for sun
       setStatus('searching');
       const spot = await findNearestSunnySpot(location, (searched, total) => {
         setSearchProgress((searched / total) * 100);
@@ -65,10 +66,10 @@ export default function HomeScreen() {
       if (spot) {
         setSunnySpot(spot);
         setStatus('found');
-        // Fetch POIs near the sunny spot in background
+        // Fetch location name, POIs in background
+        reverseGeocode(spot.coordinates).then(setSpotLocation).catch(() => {});
         fetchPOIsNearSpot(spot.coordinates).then(setPois).catch(() => {});
       } else {
-        // No sun nearby - check forecast for when sun returns here
         const sunForecast = await fetchSunnyForecast(location);
         setForecast(sunForecast);
         setStatus('no_sun_found');
@@ -83,34 +84,44 @@ export default function HomeScreen() {
     switch (status) {
       case 'idle':
         return (
-          <View style={styles.centerContent}>
-            <Text style={styles.heroEmoji}>☀️</Text>
-            <Text style={styles.heroTitle}>Sunny</Text>
+          <LinearGradient
+            colors={['#FFFBF5', '#FFF5E6', '#F5F5F5']}
+            locations={[0, 0.5, 1]}
+            style={styles.centerContent}
+          >
+            <Image
+              source={require('../assets/icon.png')}
+              style={styles.heroLogo}
+            />
+            <Text style={styles.heroTitle}>SUNNY</Text>
             <Text style={styles.heroSubtitle}>
-              Trouvez le soleil le plus proche en un instant
+              Trouvez le soleil le plus proche
             </Text>
-            <TouchableOpacity style={styles.searchButton} onPress={search} activeOpacity={0.8}>
-              <Text style={styles.searchButtonText}>Trouver le soleil</Text>
+            <TouchableOpacity onPress={search} activeOpacity={0.7}>
+              <LinearGradient
+                colors={['#F59E0B', '#D97706']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.searchButton}
+              >
+                <Text style={styles.searchButtonText}>Rechercher</Text>
+              </LinearGradient>
             </TouchableOpacity>
-          </View>
+          </LinearGradient>
         );
 
       case 'locating':
-        return (
-          <SearchingAnimation message="Localisation en cours..." />
-        );
+        return <SearchingAnimation message="Localisation..." />;
 
       case 'checking_weather':
-        return (
-          <SearchingAnimation message="Vérification de la météo..." />
-        );
+        return <SearchingAnimation message="Analyse de la meteo..." />;
 
       case 'searching':
         return (
           <>
             {currentWeather && <WeatherCard weather={currentWeather} title="Ici maintenant" />}
             <SearchingAnimation
-              message="Recherche du soleil autour de vous..."
+              message="Recherche du soleil..."
               progress={searchProgress}
             />
           </>
@@ -120,11 +131,9 @@ export default function HomeScreen() {
         return (
           <>
             {currentWeather && <WeatherCard weather={currentWeather} />}
-            <View style={styles.alreadySunny}>
-              <Text style={styles.alreadySunnyEmoji}>🎉☀️</Text>
-              <Text style={styles.alreadySunnyText}>
-                Bonne nouvelle ! Il fait déjà beau ici !
-              </Text>
+            <View style={styles.messageCard}>
+              <Text style={styles.messageTitle}>Il fait beau ici</Text>
+              <Text style={styles.messageSubtitle}>Profitez-en !</Text>
             </View>
           </>
         );
@@ -139,6 +148,7 @@ export default function HomeScreen() {
                   spot={sunnySpot}
                   userLatitude={userLocation.latitude}
                   userLongitude={userLocation.longitude}
+                  location={spotLocation}
                 />
                 <TouchableOpacity
                   style={styles.mapButton}
@@ -154,7 +164,7 @@ export default function HomeScreen() {
                       },
                     })
                   }
-                  activeOpacity={0.8}
+                  activeOpacity={0.7}
                 >
                   <Text style={styles.mapButtonText}>Voir sur la carte</Text>
                 </TouchableOpacity>
@@ -165,8 +175,7 @@ export default function HomeScreen() {
                 />
                 <HotelCard
                   spotCoordinates={sunnySpot.coordinates}
-                  spotDirection={sunnySpot.direction}
-                  spotDistance={sunnySpot.distance}
+                  cityName={spotLocation?.city}
                 />
               </>
             )}
@@ -177,18 +186,16 @@ export default function HomeScreen() {
         return (
           <>
             {currentWeather && <WeatherCard weather={currentWeather} />}
-            <View style={styles.noSun}>
-              <Text style={styles.noSunEmoji}>😔☁️</Text>
-              <Text style={styles.noSunText}>
-                Pas de soleil trouvé dans un rayon de 200 km...
-              </Text>
+            <View style={styles.messageCard}>
+              <Text style={styles.messageTitle}>Pas de soleil a proximite</Text>
+              <Text style={styles.messageSubtitle}>Aucun soleil dans un rayon de 200 km</Text>
             </View>
             {forecast ? (
               <ForecastCard forecast={forecast} />
             ) : (
-              <View style={styles.noSun}>
-                <Text style={styles.noSunSubtext}>
-                  Pas de soleil prévu dans les 48h non plus...{'\n'}Courage !
+              <View style={styles.messageCard}>
+                <Text style={styles.messageSubtitle}>
+                  Pas de soleil prevu dans les 48h non plus
                 </Text>
               </View>
             )}
@@ -197,11 +204,11 @@ export default function HomeScreen() {
 
       case 'error':
         return (
-          <View style={styles.errorContainer}>
-            <Text style={styles.errorEmoji}>⚠️</Text>
+          <View style={styles.centerContent}>
+            <Text style={styles.errorTitle}>Erreur</Text>
             <Text style={styles.errorText}>{error}</Text>
-            <TouchableOpacity style={styles.retryButton} onPress={search}>
-              <Text style={styles.retryButtonText}>Réessayer</Text>
+            <TouchableOpacity style={styles.retryButton} onPress={search} activeOpacity={0.7}>
+              <Text style={styles.retryButtonText}>Reessayer</Text>
             </TouchableOpacity>
           </View>
         );
@@ -209,35 +216,47 @@ export default function HomeScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        refreshControl={
-          <RefreshControl
-            refreshing={false}
-            onRefresh={search}
-            tintColor="#FDB813"
-          />
-        }
-      >
-        {renderContent()}
-      </ScrollView>
+    <LinearGradient
+      colors={['#FFF9F0', '#F7F7F7', '#F0F0F0']}
+      locations={[0, 0.4, 1]}
+      style={styles.gradient}
+    >
+      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={false}
+              onRefresh={search}
+              tintColor="#D97706"
+            />
+          }
+        >
+          {renderContent()}
+        </ScrollView>
 
-      {status !== 'idle' && status !== 'locating' && status !== 'checking_weather' && status !== 'searching' && (
-        <View style={styles.bottomBar}>
-          <TouchableOpacity style={styles.refreshButton} onPress={search} activeOpacity={0.8}>
-            <Text style={styles.refreshButtonText}>Actualiser</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-    </SafeAreaView>
+        {status !== 'idle' && status !== 'locating' && status !== 'checking_weather' && status !== 'searching' && (
+          <LinearGradient
+            colors={['rgba(240,240,240,0)', 'rgba(240,240,240,0.9)', 'rgba(240,240,240,1)']}
+            locations={[0, 0.3, 1]}
+            style={styles.bottomBar}
+          >
+            <TouchableOpacity style={styles.refreshButton} onPress={search} activeOpacity={0.7}>
+              <Text style={styles.refreshButtonText}>Actualiser</Text>
+            </TouchableOpacity>
+          </LinearGradient>
+        )}
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
+  gradient: {
+    flex: 1,
+  },
   container: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
   },
   scrollContent: {
     flexGrow: 1,
@@ -249,109 +268,92 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 32,
   },
-  heroEmoji: {
-    fontSize: 80,
+  heroLogo: {
+    width: 120,
+    height: 120,
     marginBottom: 16,
   },
   heroTitle: {
-    fontSize: 32,
-    fontWeight: '800',
-    color: '#333',
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#B45309',
+    letterSpacing: 4,
     marginBottom: 8,
   },
   heroSubtitle: {
     fontSize: 16,
-    color: '#888',
+    color: '#9CA3AF',
     textAlign: 'center',
     marginBottom: 40,
-    lineHeight: 24,
   },
   searchButton: {
-    backgroundColor: '#FDB813',
-    paddingVertical: 18,
+    paddingVertical: 16,
     paddingHorizontal: 48,
-    borderRadius: 30,
-    shadowColor: '#FDB813',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 6,
+    borderRadius: 12,
+    alignItems: 'center',
   },
   searchButtonText: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: '700',
+    color: '#FFFFFF',
+    fontSize: 17,
+    fontWeight: '600',
   },
-  alreadySunny: {
+  messageCard: {
     alignItems: 'center',
-    padding: 32,
+    padding: 28,
+    marginHorizontal: 16,
+    marginTop: 12,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
-  alreadySunnyEmoji: {
-    fontSize: 48,
-    marginBottom: 12,
-  },
-  alreadySunnyText: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#F57F17',
-    textAlign: 'center',
-  },
-  noSun: {
-    alignItems: 'center',
-    padding: 32,
-  },
-  noSunEmoji: {
-    fontSize: 48,
-    marginBottom: 12,
-  },
-  noSunText: {
+  messageTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#555',
-    textAlign: 'center',
-    marginBottom: 8,
+    color: '#1C1C1E',
+    marginBottom: 4,
   },
-  noSunSubtext: {
+  messageSubtitle: {
     fontSize: 14,
-    color: '#888',
+    color: '#9CA3AF',
     textAlign: 'center',
   },
   mapButton: {
-    backgroundColor: '#2196F3',
+    backgroundColor: '#FFFFFF',
     marginHorizontal: 16,
     marginTop: 8,
     paddingVertical: 14,
-    borderRadius: 16,
+    borderRadius: 10,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#D97706',
   },
   mapButtonText: {
-    color: '#fff',
-    fontSize: 16,
+    color: '#D97706',
+    fontSize: 15,
     fontWeight: '600',
   },
-  errorContainer: {
-    alignItems: 'center',
-    padding: 32,
-  },
-  errorEmoji: {
-    fontSize: 48,
-    marginBottom: 12,
+  errorTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1C1C1E',
+    marginBottom: 8,
   },
   errorText: {
-    fontSize: 16,
-    color: '#D32F2F',
+    fontSize: 15,
+    color: '#9CA3AF',
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: 24,
   },
   retryButton: {
-    backgroundColor: '#F57F17',
+    backgroundColor: '#D97706',
     paddingVertical: 12,
     paddingHorizontal: 32,
-    borderRadius: 16,
+    borderRadius: 10,
   },
   retryButtonText: {
-    color: '#fff',
-    fontSize: 16,
+    color: '#FFFFFF',
+    fontSize: 15,
     fontWeight: '600',
   },
   bottomBar: {
@@ -359,18 +361,19 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    padding: 16,
-    backgroundColor: '#FAFAFA',
+    paddingTop: 24,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
   },
   refreshButton: {
-    backgroundColor: '#FDB813',
+    backgroundColor: '#D97706',
     paddingVertical: 14,
-    borderRadius: 16,
+    borderRadius: 10,
     alignItems: 'center',
   },
   refreshButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '600',
   },
 });
