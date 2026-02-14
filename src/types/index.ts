@@ -22,4 +22,13 @@ export interface SunnySpot {
   estimatedTime: number; // minutes
 }
 
+export interface SunnyForecast {
+  hoursUntilSun: number;
+  sunnyTime: string; // "14:00"
+  weatherCode: number;
+  label: string;
+  emoji: string;
+  temperature: number;
+}
+
 export type SearchStatus = 'idle' | 'locating' | 'checking_weather' | 'searching' | 'found' | 'already_sunny' | 'no_sun_found' | 'error';

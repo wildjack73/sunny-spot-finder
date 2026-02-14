@@ -12,10 +12,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import WeatherCard from '../src/components/WeatherCard';
 import SunnySpotCard from '../src/components/SunnySpotCard';
 import SearchingAnimation from '../src/components/SearchingAnimation';
+import ForecastCard from '../src/components/ForecastCard';
 import { getCurrentLocation } from '../src/services/location';
-import { fetchWeatherAtPoint } from '../src/services/weather';
+import { fetchWeatherAtPoint, fetchSunnyForecast } from '../src/services/weather';
 import { findNearestSunnySpot } from '../src/services/sunnyFinder';
-import { Coordinates, WeatherData, SunnySpot, SearchStatus } from '../src/types';
+import { Coordinates, WeatherData, SunnySpot, SunnyForecast, SearchStatus } from '../src/types';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -23,6 +24,7 @@ export default function HomeScreen() {
   const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
   const [currentWeather, setCurrentWeather] = useState<WeatherData | null>(null);
   const [sunnySpot, setSunnySpot] = useState<SunnySpot | null>(null);
+  const [forecast, setForecast] = useState<SunnyForecast | null>(null);
   const [searchProgress, setSearchProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
@@ -30,6 +32,7 @@ export default function HomeScreen() {
     setStatus('locating');
     setError(null);
     setSunnySpot(null);
+    setForecast(null);
     setSearchProgress(0);
 
     try {
@@ -58,6 +61,9 @@ export default function HomeScreen() {
         setSunnySpot(spot);
         setStatus('found');
       } else {
+        // No sun nearby - check forecast for when sun returns here
+        const sunForecast = await fetchSunnyForecast(location);
+        setForecast(sunForecast);
         setStatus('no_sun_found');
       }
     } catch (err) {
@@ -157,12 +163,18 @@ export default function HomeScreen() {
             <View style={styles.noSun}>
               <Text style={styles.noSunEmoji}>😔☁️</Text>
               <Text style={styles.noSunText}>
-                Pas de soleil trouvé dans un rayon de 100 km...
-              </Text>
-              <Text style={styles.noSunSubtext}>
-                Parfois la grisaille s'étend loin. Réessayez plus tard !
+                Pas de soleil trouvé dans un rayon de 200 km...
               </Text>
             </View>
+            {forecast ? (
+              <ForecastCard forecast={forecast} />
+            ) : (
+              <View style={styles.noSun}>
+                <Text style={styles.noSunSubtext}>
+                  Pas de soleil prévu dans les 48h non plus...{'\n'}Courage !
+                </Text>
+              </View>
+            )}
           </>
         );
 

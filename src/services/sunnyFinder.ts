@@ -14,7 +14,7 @@ export async function findNearestSunnySpot(
   userLocation: Coordinates,
   onProgress?: (searched: number, total: number) => void,
 ): Promise<SunnySpot | null> {
-  const distances = [5, 10, 15, 20, 30, 50, 80, 100];
+  const distances = [5, 10, 15, 20, 30, 50, 80, 100, 130, 160, 200];
   const allPoints = generateSurroundingPoints(userLocation, distances, 8);
   const totalPoints = allPoints.length;
   let searched = 0;

@@ -1,5 +1,5 @@
-import { Coordinates, WeatherData } from '../types';
-import { getWeatherInfo } from '../utils/weatherCodes';
+import { Coordinates, WeatherData, SunnyForecast } from '../types';
+import { getWeatherInfo, isSunnyCode } from '../utils/weatherCodes';
 
 const BASE_URL = 'https://api.open-meteo.com/v1/forecast';
 
@@ -8,6 +8,14 @@ interface OpenMeteoResponse {
     weather_code: number;
     temperature_2m: number;
     wind_speed_10m: number;
+  };
+}
+
+interface OpenMeteoHourlyResponse {
+  hourly: {
+    time: string[];
+    weather_code: number[];
+    temperature_2m: number[];
   };
 }
 
@@ -61,4 +69,44 @@ export async function fetchWeatherAtMultiplePoints(
       ...info,
     };
   });
+}
+
+export async function fetchSunnyForecast(
+  coords: Coordinates,
+): Promise<SunnyForecast | null> {
+  const url = `${BASE_URL}?latitude=${coords.latitude}&longitude=${coords.longitude}&hourly=weather_code,temperature_2m&forecast_days=2`;
+
+  const response = await fetch(url);
+  if (!response.ok) return null;
+
+  const data: OpenMeteoHourlyResponse = await response.json();
+  const now = new Date();
+
+  for (let i = 0; i < data.hourly.time.length; i++) {
+    const forecastTime = new Date(data.hourly.time[i]);
+    if (forecastTime <= now) continue;
+
+    const code = data.hourly.weather_code[i];
+    if (isSunnyCode(code)) {
+      const hoursUntilSun = Math.round(
+        (forecastTime.getTime() - now.getTime()) / (1000 * 60 * 60),
+      );
+      const info = getWeatherInfo(code);
+      const timeStr = forecastTime.toLocaleTimeString('fr-FR', {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+
+      return {
+        hoursUntilSun,
+        sunnyTime: timeStr,
+        weatherCode: code,
+        label: info.label,
+        emoji: info.emoji,
+        temperature: Math.round(data.hourly.temperature_2m[i]),
+      };
+    }
+  }
+
+  return null;
 }
