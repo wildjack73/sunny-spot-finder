@@ -1,37 +1,35 @@
 import { Coordinates } from '../types';
 
-const CAMREF = '1011l424119';
-const BASE_URL = 'https://www.expedia.fr/Hotel-Search';
+const CAMREF = '1011|424119';
+const PARTNERIZE_BASE = 'https://prf.hn/click';
+
+// Build a Partnerize tracked deep link to Hotels.com search
+function buildTrackedLink(destinationUrl: string): string {
+  const encodedUrl = encodeURIComponent(destinationUrl);
+  return `${PARTNERIZE_BASE}/camref:${CAMREF}/destination:${encodedUrl}`;
+}
 
 export function buildExpediaHotelLink(coords: Coordinates): string {
   const checkin = getDateString(0); // today
   const checkout = getDateString(1); // tomorrow
+  const lat = coords.latitude.toFixed(4);
+  const lon = coords.longitude.toFixed(4);
 
-  const params = new URLSearchParams({
-    latLong: `${coords.latitude.toFixed(4)},${coords.longitude.toFixed(4)}`,
-    d1: checkin,
-    d2: checkout,
-    sort: 'DISTANCE',
-    CAMREF: CAMREF,
-  });
+  const destination = `https://www.hotels.com/search.do?q-destination=&latLong=${lat},${lon}&q-check-in=${checkin}&q-check-out=${checkout}&sort-order=DISTANCE`;
 
-  return `${BASE_URL}?${params.toString()}`;
+  return buildTrackedLink(destination);
 }
 
 export function buildExpediaWeekendLink(coords: Coordinates): string {
   const nextSaturday = getNextWeekendDate();
   const sunday = new Date(nextSaturday);
   sunday.setDate(sunday.getDate() + 1);
+  const lat = coords.latitude.toFixed(4);
+  const lon = coords.longitude.toFixed(4);
 
-  const params = new URLSearchParams({
-    latLong: `${coords.latitude.toFixed(4)},${coords.longitude.toFixed(4)}`,
-    d1: formatDate(nextSaturday),
-    d2: formatDate(sunday),
-    sort: 'DISTANCE',
-    CAMREF: CAMREF,
-  });
+  const destination = `https://www.hotels.com/search.do?q-destination=&latLong=${lat},${lon}&q-check-in=${formatDate(nextSaturday)}&q-check-out=${formatDate(sunday)}&sort-order=DISTANCE`;
 
-  return `${BASE_URL}?${params.toString()}`;
+  return buildTrackedLink(destination);
 }
 
 function getDateString(daysFromNow: number): string {
