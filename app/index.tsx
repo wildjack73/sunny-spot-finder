@@ -13,10 +13,12 @@ import WeatherCard from '../src/components/WeatherCard';
 import SunnySpotCard from '../src/components/SunnySpotCard';
 import SearchingAnimation from '../src/components/SearchingAnimation';
 import ForecastCard from '../src/components/ForecastCard';
+import POIList from '../src/components/POIList';
 import { getCurrentLocation } from '../src/services/location';
 import { fetchWeatherAtPoint, fetchSunnyForecast } from '../src/services/weather';
 import { findNearestSunnySpot } from '../src/services/sunnyFinder';
-import { Coordinates, WeatherData, SunnySpot, SunnyForecast, SearchStatus } from '../src/types';
+import { fetchPOIsNearSpot } from '../src/services/poi';
+import { Coordinates, WeatherData, SunnySpot, SunnyForecast, PointOfInterest, SearchStatus } from '../src/types';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -25,6 +27,7 @@ export default function HomeScreen() {
   const [currentWeather, setCurrentWeather] = useState<WeatherData | null>(null);
   const [sunnySpot, setSunnySpot] = useState<SunnySpot | null>(null);
   const [forecast, setForecast] = useState<SunnyForecast | null>(null);
+  const [pois, setPois] = useState<PointOfInterest[]>([]);
   const [searchProgress, setSearchProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,6 +36,7 @@ export default function HomeScreen() {
     setError(null);
     setSunnySpot(null);
     setForecast(null);
+    setPois([]);
     setSearchProgress(0);
 
     try {
@@ -60,6 +64,8 @@ export default function HomeScreen() {
       if (spot) {
         setSunnySpot(spot);
         setStatus('found');
+        // Fetch POIs near the sunny spot in background
+        fetchPOIsNearSpot(spot.coordinates).then(setPois).catch(() => {});
       } else {
         // No sun nearby - check forecast for when sun returns here
         const sunForecast = await fetchSunnyForecast(location);
@@ -151,6 +157,11 @@ export default function HomeScreen() {
                 >
                   <Text style={styles.mapButtonText}>Voir sur la carte</Text>
                 </TouchableOpacity>
+                <POIList
+                  pois={pois}
+                  userLatitude={userLocation.latitude}
+                  userLongitude={userLocation.longitude}
+                />
               </>
             )}
           </>

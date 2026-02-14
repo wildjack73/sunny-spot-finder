@@ -31,4 +31,15 @@ export interface SunnyForecast {
   temperature: number;
 }
 
+export interface PointOfInterest {
+  id: string;
+  name: string;
+  coordinates: Coordinates;
+  type: POIType;
+  emoji: string;
+  distance: number; // km from sunny spot
+}
+
+export type POIType = 'beach' | 'park' | 'viewpoint' | 'lake' | 'hiking' | 'nature';
+
 export type SearchStatus = 'idle' | 'locating' | 'checking_weather' | 'searching' | 'found' | 'already_sunny' | 'no_sun_found' | 'error';

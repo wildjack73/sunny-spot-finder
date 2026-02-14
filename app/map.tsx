@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { Marker } from 'react-native-maps';
+import { fetchPOIsNearSpot } from '../src/services/poi';
+import { PointOfInterest } from '../src/types';
 
 export default function MapScreen() {
   const params = useLocalSearchParams<{
@@ -17,6 +19,14 @@ export default function MapScreen() {
   const spotLat = parseFloat(params.spotLat || '0');
   const spotLon = parseFloat(params.spotLon || '0');
   const spotLabel = params.spotLabel || 'Soleil';
+
+  const [pois, setPois] = useState<PointOfInterest[]>([]);
+
+  useEffect(() => {
+    fetchPOIsNearSpot({ latitude: spotLat, longitude: spotLon })
+      .then(setPois)
+      .catch(() => {});
+  }, [spotLat, spotLon]);
 
   const midLat = (userLat + spotLat) / 2;
   const midLon = (userLon + spotLon) / 2;
@@ -46,6 +56,18 @@ export default function MapScreen() {
           description={spotLabel}
           pinColor="orange"
         />
+        {pois.map((poi) => (
+          <Marker
+            key={poi.id}
+            coordinate={{
+              latitude: poi.coordinates.latitude,
+              longitude: poi.coordinates.longitude,
+            }}
+            title={`${poi.emoji} ${poi.name}`}
+            description={`${poi.distance} km du spot`}
+            pinColor="green"
+          />
+        ))}
       </MapView>
 
       <View style={styles.legend}>
@@ -55,7 +77,11 @@ export default function MapScreen() {
         </View>
         <View style={styles.legendItem}>
           <Text style={styles.legendDot}>🟠</Text>
-          <Text style={styles.legendText}>Soleil - {spotLabel}</Text>
+          <Text style={styles.legendText}>Soleil</Text>
+        </View>
+        <View style={styles.legendItem}>
+          <Text style={styles.legendDot}>🟢</Text>
+          <Text style={styles.legendText}>Loisirs</Text>
         </View>
       </View>
     </View>
