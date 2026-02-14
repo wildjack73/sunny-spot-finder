@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Sunny Spot Finder",
-    "slug": "sunny-spot-finder",
+    "name": "Sunny",
+    "slug": "sunny",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",

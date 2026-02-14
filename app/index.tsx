@@ -14,6 +14,7 @@ import SunnySpotCard from '../src/components/SunnySpotCard';
 import SearchingAnimation from '../src/components/SearchingAnimation';
 import ForecastCard from '../src/components/ForecastCard';
 import POIList from '../src/components/POIList';
+import HotelCard from '../src/components/HotelCard';
 import { getCurrentLocation } from '../src/services/location';
 import { fetchWeatherAtPoint, fetchSunnyForecast } from '../src/services/weather';
 import { findNearestSunnySpot } from '../src/services/sunnyFinder';
@@ -84,7 +85,7 @@ export default function HomeScreen() {
         return (
           <View style={styles.centerContent}>
             <Text style={styles.heroEmoji}>☀️</Text>
-            <Text style={styles.heroTitle}>Sunny Spot Finder</Text>
+            <Text style={styles.heroTitle}>Sunny</Text>
             <Text style={styles.heroSubtitle}>
               Trouvez le soleil le plus proche en un instant
             </Text>
@@ -161,6 +162,11 @@ export default function HomeScreen() {
                   pois={pois}
                   userLatitude={userLocation.latitude}
                   userLongitude={userLocation.longitude}
+                />
+                <HotelCard
+                  spotCoordinates={sunnySpot.coordinates}
+                  spotDirection={sunnySpot.direction}
+                  spotDistance={sunnySpot.distance}
                 />
               </>
             )}
