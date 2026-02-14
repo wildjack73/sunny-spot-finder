@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Linking } from 'react-native';
 import { Coordinates } from '../types';
-import { buildExpediaHotelLink, buildExpediaWeekendLink } from '../services/expedia';
+import { buildHotelSearchLink, buildWeekendSearchLink } from '../services/expedia';
 
 interface Props {
   spotCoordinates: Coordinates;
@@ -11,11 +11,11 @@ interface Props {
 
 export default function HotelCard({ spotCoordinates, spotDirection, spotDistance }: Props) {
   const openTonight = () => {
-    Linking.openURL(buildExpediaHotelLink(spotCoordinates));
+    Linking.openURL(buildHotelSearchLink(spotCoordinates));
   };
 
   const openWeekend = () => {
-    Linking.openURL(buildExpediaWeekendLink(spotCoordinates));
+    Linking.openURL(buildWeekendSearchLink(spotCoordinates));
   };
 
   return (
